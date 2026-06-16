@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xingru Chen</title>
+<style>
+/* ── TOKENS ── */
+[data-theme="light"] {
+  --bg:       #faf9f7;
+  --surface:  #f2f0ec;
+  --text:     #1c1c1c;
+  --muted:    #5a5a5a;
+  --light:    #999;
+  --border:   #dedad4;
+  --accent:   #5c6e4e;   /* muted olive-green */
+  --acc-dim:  rgba(92,110,78,0.12);
+  --nav-bg:   rgba(250,249,247,0.88);
+}
+[data-theme="dark"] {
+  --bg:       #111110;
+  --surface:  #1c1b19;
+  --text:     #f0ece4;
+  --muted:    #a09890;
+  --light:    #666;
+  --border:   #2e2c28;
+  --accent:   #e8783a;   /* burnt orange */
+  --acc-dim:  rgba(232,120,58,0.12);
+  --nav-bg:   rgba(17,17,16,0.88);
+}
+
+/* ── RESET ── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px; line-height: 1.72;
+  color: var(--text); background: var(--bg);
+  transition: background .3s, color .3s;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  background: var(--nav-bg);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 max(24px, calc(50% - 430px));
+  height: 48px;
+  transition: background .3s, border-color .3s;
+}
+.nav-name {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  letter-spacing: -0.1px;
+}
+.nav-links {
+  display: flex; align-items: center; gap: 6px; list-style: none;
+}
+.nav-links a {
+  font-size: 13px; color: var(--muted); padding: 5px 10px;
+  border-radius: 6px; transition: color .15s, background .15s;
+}
+.nav-links a:hover {
+  color: var(--text); background: var(--acc-dim); text-decoration: none;
+}
+.theme-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; margin-left: 8px; transition: background .15s, border-color .15s;
+  flex-shrink: 0;
+}
+.theme-btn:hover { background: var(--acc-dim); color: var(--text); }
+
+/* ── PAGE ── */
+.page {
+  max-width: 860px; margin: 0 auto;
+  padding: 88px 24px 80px;
+}
+
+/* ── HEADER ── */
+.header {
+  display: grid; grid-template-columns: 148px 1fr;
+  gap: 36px; align-items: start;
+  margin-bottom: 56px;
+}
+.photo {
+  width: 148px; height: 148px; border-radius: 8px;
+  object-fit: cover; object-position: center top;
+  display: block;
+  filter: grayscale(8%);
+}
+.header-info h1 {
+  font-size: 25px; font-weight: 700; letter-spacing: -0.4px;
+  color: var(--text); margin-bottom: 6px;
+}
+.header-tagline {
+  font-size: 14.5px; color: var(--muted);
+  line-height: 1.65; margin-bottom: 18px; max-width: 440px;
+}
+.contact-row {
+  display: flex; flex-wrap: wrap; gap: 6px 4px; align-items: center;
+}
+.contact-icon-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px;
+  color: var(--muted); border: 1px solid var(--border);
+  background: var(--surface);
+  transition: color .15s, border-color .15s, background .15s;
+  text-decoration: none;
+}
+.contact-icon-link:hover {
+  color: var(--accent); border-color: var(--accent);
+  background: var(--acc-dim); text-decoration: none;
+}
+.contact-icon-link svg {
+  width: 15px; height: 15px;
+  stroke: currentColor; fill: none; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.contact-plain {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12.5px; color: var(--muted);
+}
+.contact-plain svg {
+  width: 13px; height: 13px; flex-shrink: 0;
+  stroke: currentColor; fill: none; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ── SECTION ── */
+.section { margin-bottom: 48px; }
+.section h2 {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 18px; padding-bottom: 7px;
+  border-bottom: 1px solid var(--border);
+}
+.bio p {
+  font-size: 15px; color: var(--muted); line-height: 1.78;
+  margin-bottom: 10px;
+}
+.research-statement {
+  font-size: 15px; font-weight: 600; color: var(--text) !important;
+  line-height: 1.7; margin-top: 4px;
+  padding-left: 12px;
+  border-left: 2px solid var(--accent);
+}
+.news-timeline { position: relative; }
+.ntl-item {
+  display: grid;
+  grid-template-columns: 72px 16px 1fr;
+  gap: 0 12px;
+  align-items: start;
+  position: relative;
+  min-height: 36px;
+}
+.ntl-item:not(.ntl-last)::after {
+  content: "";
+  position: absolute;
+  left: 79px;
+  top: 8px;
+  bottom: -8px;
+  width: 1px;
+  background: var(--border);
+}
+.ntl-left {
+  text-align: right;
+  padding-top: 2px;
+}
+.ntl-date {
+  font-size: 11.5px; color: var(--light); font-weight: 500;
+  white-space: nowrap; letter-spacing: 0.02em;
+}
+.ntl-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  outline: 1px solid var(--accent);
+  margin-top: 5px;
+  justify-self: center;
+  flex-shrink: 0;
+  position: relative; z-index: 1;
+}
+.ntl-right {
+  font-size: 13.5px; color: var(--muted); line-height: 1.65;
+  padding-bottom: 18px;
+}
+.ntl-right strong { color: var(--text); font-weight: 600; }
+.ntl-right em { font-style: italic; }
+.ntl-last .ntl-right { padding-bottom: 0; }
+
+/* ── PUBLICATION ── */
+.pub {
+  margin-bottom: 20px; padding-left: 14px;
+  border-left: 2px solid var(--border);
+}
+.pub-venue {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  color: var(--bg); background: var(--accent);
+  border-radius: 3px; padding: 1px 7px; margin-bottom: 5px;
+  letter-spacing: 0.03em;
+}
+.pub-title {
+  font-size: 14.5px; font-weight: 600; color: var(--text);
+  line-height: 1.45; margin-bottom: 3px;
+}
+.pub-authors {
+  font-size: 13px; color: var(--muted); margin-bottom: 4px; line-height: 1.55;
+}
+.pub-authors strong { color: var(--text); font-weight: 600; }
+.pub-desc {
+  font-size: 13px; color: var(--light); line-height: 1.6; margin-bottom: 6px;
+}
+.pub-links { display: flex; gap: 12px; }
+.pub-links a { font-size: 12.5px; font-weight: 500; color: var(--accent); }
+
+/* ── EXPERIENCE ── */
+.entry { margin-bottom: 26px; display: grid; grid-template-columns: 1fr auto; gap: 0 20px; align-items: start; }
+.entry-date { font-size: 12px; color: var(--light); white-space: nowrap; padding-top: 2px; text-align: right; }
+.entry-org { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 1px; letter-spacing: 0.01em; }
+.entry-role { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 1px; line-height: 1.4; }
+.entry-project { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 7px; }
+.entry-bullets { list-style: none; }
+.entry-bullets li {
+  font-size: 13.5px; color: var(--muted); padding-left: 14px;
+  position: relative; margin-bottom: 4px; line-height: 1.6;
+}
+.entry-bullets li::before { content: "-"; position: absolute; left: 0; color: var(--light); }
+
+/* ── TIMELINE (Education) ── */
+.timeline {
+  position: relative;
+  padding-left: 22px;
+}
+.timeline::before {
+  content: "";
+  position: absolute; left: 0; top: 6px; bottom: 6px;
+  width: 1px; background: var(--border);
+}
+.tl-item {
+  position: relative;
+  margin-bottom: 24px;
+}
+.tl-item::before {
+  content: "";
+  position: absolute; left: -25px; top: 6px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  outline: 1px solid var(--accent);
+}
+.tl-year {
+  font-size: 11.5px; color: var(--light); font-weight: 500;
+  margin-bottom: 2px; letter-spacing: 0.03em;
+}
+.tl-school {
+  font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 1px;
+  display: flex; align-items: center;
+}
+.tl-detail {
+  font-size: 13px; color: var(--muted); line-height: 1.55;
+}
+.tl-gpa {
+  display: inline-block; font-size: 11.5px; font-weight: 600;
+  color: var(--accent); background: var(--acc-dim);
+  border-radius: 4px; padding: 1px 8px; margin-top: 3px;
+}
+.tl-logo {
+  width: 26px; height: 26px; border-radius: 50%;
+  flex-shrink: 0; object-fit: contain;
+  margin-right: 9px;
+  vertical-align: middle;
+  position: relative; top: -1px;
+  background: white;
+  padding: 1px;
+}
+
+/* ── SKILLS ── */
+.skills-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.skills-table tr + tr td { padding-top: 8px; }
+.skills-table td:first-child {
+  font-weight: 600; color: var(--text); width: 120px;
+  vertical-align: top; padding-right: 20px;
+}
+.skills-table td:last-child { color: var(--muted); line-height: 1.6; }
+
+/* ── HONORS ── */
+.honor {
+  font-size: 13.5px; color: var(--muted); padding-left: 14px;
+  position: relative; margin-bottom: 6px; line-height: 1.55;
+}
+.honor::before { content: "-"; position: absolute; left: 0; color: var(--light); }
+.honor strong { color: var(--text); }
+
+/* ── FOOTER ── */
+.interests-row {
+  display: flex; flex-wrap: wrap; gap: 10px;
+}
+.interest-item {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13.5px; color: var(--muted);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 14px;
+  transition: border-color .15s, color .15s;
+}
+.interest-item:hover { border-color: var(--accent); color: var(--text); }
+.interest-icon { font-size: 16px; }
+.footer {
+  margin-top: 64px; padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--light);
+  display: flex; justify-content: space-between;
+}
+.footer a { color: var(--light); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 580px) {
+  .header { grid-template-columns: 1fr; }
+  .photo { width: 100px; height: 100px; }
+  .entry { grid-template-columns: 1fr; }
+  .entry-date { text-align: left; margin-top: 2px; }
+  .interests-row {
+  display: flex; flex-wrap: wrap; gap: 10px;
+}
+.interest-item {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13.5px; color: var(--muted);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 14px;
+  transition: border-color .15s, color .15s;
+}
+.interest-item:hover { border-color: var(--accent); color: var(--text); }
+.interest-icon { font-size: 16px; }
+.footer { flex-direction: column; gap: 4px; }
+  .nav-links li:not(:last-child) { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-name">Xingru Chen</span>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#publications">Publications</a></li>
+    <li><a href="#experience">Research</a></li>
+    <li><a href="#education">Education</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li>
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+        <span id="theme-icon">&#9790;</span>
+      </button>
+    </li>
+  </ul>
+</nav>
+
+<div class="page">
+
+<!-- HEADER -->
+<header class="header" id="about">
+  <img src="photo.jpg" alt="Xingru Chen" class="photo">
+  <div class="header-info">
+    <h1>Xingru Chen</h1>
+    <p class="header-tagline">
+      I study human-computer interaction, AR, and AI &mdash; driven by an open question:
+      what would the next generation of interaction feel like if it were genuinely warmer,
+      more attuned to people, more in tune with how we inhabit the world?
+      I am a third-year undergraduate, expecting to graduate in June 2027, and am looking for PhD or Master&rsquo;s programs starting Fall 2027.
+    </p>
+    <div class="contact-row">
+      <a href="mailto:Xingruisme@gmail.com" class="contact-icon-link" title="Xingruisme@gmail.com">
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+      </a>
+      <span class="contact-plain">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Beijing, China
+      </span>
+    </div>
+  </div>
+</header>
+
+<!-- ABOUT -->
+<section class="section bio">
+  <h2>About</h2>
+  <p>I am an undergraduate researcher in Computer Science (Digital Media Technology) at Beijing Forestry University, currently working at the Institute for AI Industry Research (AIR) and the Pervasive HCI (PI) Lab at Tsinghua University, and spending summer 2026 as a Mitacs Globalink Research Intern at the University of New Brunswick.</p>
+  <p>My research explores new paradigms for human-computer interaction at the intersection of AR, embodied AI, and multimodal sensing. I am drawn to the question of how computing can feel less like a tool and more like something that understands the human body, attention, and intent &mdash; warmer, and more naturally woven into how we move through the world.</p>
+  <p class="research-statement"><strong>My goal is to design interaction systems that are not merely efficient, but genuinely human &mdash; ones that sense, adapt to, and resonate with the people who use them.</strong></p>
+</section>
+
+<!-- PUBLICATIONS -->
+<section class="section" id="news">
+  <h2>News</h2>
+  <div class="news-timeline">
+
+    <div class="ntl-item">
+      <div class="ntl-left">
+        <span class="ntl-date">Jun 2026</span>
+      </div>
+      <div class="ntl-dot"></div>
+      <div class="ntl-right">
+        Started <strong>Mitacs Globalink Research Internship</strong> at the University of New Brunswick, working on VR-based prosthesis emulation with Prof. Ahmed Shehata.
+      </div>
+    </div>
+
+    <div class="ntl-item">
+      <div class="ntl-left">
+        <span class="ntl-date">Apr 2026</span>
+      </div>
+      <div class="ntl-dot"></div>
+      <div class="ntl-right">
+        Paper <em>3D-MAGIC: Expanding MAGIC Pointing to Stereoscopic Displays</em> presented at <strong>CHI 2026</strong> in Barcelona.
+      </div>
+    </div>
+
+    <div class="ntl-item">
+      <div class="ntl-left">
+        <span class="ntl-date">Jan 2026</span>
+      </div>
+      <div class="ntl-dot"></div>
+      <div class="ntl-right">
+        Joined <strong>Institute for AI Industry Research (AIR), Tsinghua University</strong>, working on multimodal interactive generative agents with Prof. Jiangtao Gong.
+      </div>
+    </div>
+
+    <div class="ntl-item">
+      <div class="ntl-left">
+        <span class="ntl-date">Dec 2025</span>
+      </div>
+      <div class="ntl-dot"></div>
+      <div class="ntl-right">
+        Joined <strong>Pervasive HCI (PI) Lab, Tsinghua University</strong>, researching portable multispectral imaging for object reconstruction and material sensing.
+      </div>
+    </div>
+
+    <div class="ntl-item">
+      <div class="ntl-left">
+        <span class="ntl-date">Nov 2025</span>
+      </div>
+      <div class="ntl-dot"></div>
+      <div class="ntl-right">
+        Joined <strong>Key Lab of Traditional Craftsmanship and Materials, Tsinghua University</strong> as VR &amp; AI Research Intern, developing immersive heritage experiences for Beijing Embroidery (Jingxiu).
+      </div>
+    </div>
+
+    <div class="ntl-item">
+      <div class="ntl-left">
+        <span class="ntl-date">Jul 2025</span>
+      </div>
+      <div class="ntl-dot"></div>
+      <div class="ntl-right">
+        Attended <strong>UC Berkeley Summer Session</strong>, taking courses on AI applications and the cognitive science of user experience.
+      </div>
+    </div>
+
+    <div class="ntl-item">
+      <div class="ntl-left">
+        <span class="ntl-date">Sep 2024</span>
+      </div>
+      <div class="ntl-dot"></div>
+      <div class="ntl-right">
+        Chose <strong>Digital Media Technology</strong> as major after the first-year general track at Beijing Forestry University.
+      </div>
+    </div>
+
+    <div class="ntl-item ntl-last">
+      <div class="ntl-left">
+        <span class="ntl-date">Sep 2023</span>
+      </div>
+      <div class="ntl-dot"></div>
+      <div class="ntl-right">
+        Started undergraduate studies in <strong>Computer Science</strong> at <strong>Beijing Forestry University</strong>.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="section" id="publications">
+  <h2>Publications</h2>
+  <div class="pub">
+    <span class="pub-venue">CHI 2026 &middot; Poster</span>
+    <p class="pub-title">3D-MAGIC: Expanding MAGIC Pointing to Stereoscopic Displays</p>
+    <p class="pub-authors">Xingjian Tian, Lily Sheng, Xiyuxing Zhang, <strong>Xingru Chen</strong>, Fangfei Gou, Zhenzhou Zhang, Wanjun Lv, Liuxin Zhang, Yuntao Wang, Yuanchun Shi</p>
+    <p class="pub-desc">We extend the MAGIC (Manual And Gaze Input Cascaded) pointing paradigm to stereoscopic 3D displays using Bayesian gaze-depth estimation, enabling fast and precise target acquisition. A user study (N&nbsp;=&nbsp;10) showed a 20.7% throughput improvement over mouse-only interaction in immersive settings.</p>
+    <div class="pub-links">
+      <a href="https://doi.org/10.1145/3772363.3798896" target="_blank">[Paper]</a>
+      <a href="https://doi.org/10.1145/3772363.3798896" target="_blank">[ACM DL]</a>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--light)">Work on multimodal interactive generative agents (AIR, Tsinghua) is in preparation for AAAI 2027.</p>
+</section>
+
+<!-- RESEARCH -->
+<section class="section" id="experience">
+  <h2>Research Experience</h2>
+
+  <div class="entry">
+    <div>
+      <p class="entry-org">University of New Brunswick &middot; Mitacs Globalink</p>
+      <p class="entry-role">Research Intern, Institute of Biomedical Engineering</p>
+      <p class="entry-project">Supervisor: Prof. Ahmed Shehata &mdash; Virtual Prosthesis Emulator Platform</p>
+      <ul class="entry-bullets">
+        <li>Developing a VR-based prosthesis emulator in Unity integrating eye-tracking and arm motion capture for rehabilitation research.</li>
+        <li>Implementing multimodal interaction pipelines combining motion signals with ML-based prosthesis control algorithms.</li>
+        <li>Designing real-time human-machine interaction systems for assistive technology assessment.</li>
+      </ul>
+    </div>
+    <span class="entry-date">Jun &ndash; Sep 2026</span>
+  </div>
+
+  <div class="entry">
+    <div>
+      <p class="entry-org">Institute for AI Industry Research (AIR), Tsinghua University</p>
+      <p class="entry-role">Research Assistant</p>
+      <p class="entry-project">Supervisor: Prof. Jiangtao Gong &mdash; Multimodal Interactive Generative Model and Agent</p>
+      <ul class="entry-bullets">
+        <li>Built a multimodal interactive agent framework integrating visual perception, language understanding, image generation, and 3D content creation for real-time human-AI interaction.</li>
+        <li>Constructed an end-to-end pipeline for image generation, 3D reconstruction, pose calibration, and parameter alignment supporting virtual try-on and spatial interaction tasks.</li>
+        <li>Extended multimodal video interaction models with image editing, annotation generation, and single-image 3D reconstruction capabilities.</li>
+      </ul>
+    </div>
+    <span class="entry-date">Jan 2026 &ndash; Present</span>
+  </div>
+
+  <div class="entry">
+    <div>
+      <p class="entry-org">Pervasive HCI (PI) Lab, Tsinghua University</p>
+      <p class="entry-role">Student Intern</p>
+      <p class="entry-project">Portable Multispectral Imaging for Object Reconstruction and Material Sensing</p>
+      <ul class="entry-bullets">
+        <li>Researching phone-based multispectral and hyperspectral imaging for 3D object reconstruction and material understanding.</li>
+        <li>Exploring lightweight imaging on mobile and wearable devices including smartphones and smart glasses.</li>
+      </ul>
+    </div>
+    <span class="entry-date">Dec 2025 &ndash; Present</span>
+  </div>
+
+  <div class="entry">
+    <div>
+      <p class="entry-org">Key Lab of Traditional Craftsmanship and Materials, Tsinghua University</p>
+      <p class="entry-role">VR and AI Research Intern</p>
+      <p class="entry-project">AI in the Preservation and Innovation of Beijing Embroidery (Jingxiu)</p>
+      <ul class="entry-bullets">
+        <li>Developed an immersive VR educational platform in Unity with PICO headsets for interactive Jingxiu cultural heritage experiences.</li>
+        <li>Integrated generative AI for real-time embroidery pattern generation and personalized learning suggestions.</li>
+        <li>Collaborated with Jingxiu inheritor Fanggang Chen to ensure cultural authenticity.</li>
+      </ul>
+    </div>
+    <span class="entry-date">Nov 2025 &ndash; Feb 2026</span>
+  </div>
+</section>
+
+<!-- EDUCATION TIMELINE -->
+<section class="section" id="education">
+  <h2>Education</h2>
+  <div class="timeline">
+
+    <div class="tl-item">
+      <p class="tl-year">Jun 2026 &ndash; Sep 2026</p>
+      <p class="tl-school">
+        <img class="tl-logo" src="logo_unb.png" alt="University of New Brunswick">
+        University of New Brunswick &nbsp;&middot;&nbsp; Fredericton, Canada
+      </p>
+      <p class="tl-detail">Mitacs Globalink Research Internship &nbsp;&middot;&nbsp; Institute of Biomedical Engineering</p>
+    </div>
+
+    <div class="tl-item">
+      <p class="tl-year">Nov 2025 &ndash; Present</p>
+      <p class="tl-school">
+        <img class="tl-logo" src="logo_thu.png" alt="Tsinghua University">
+        Tsinghua University &nbsp;&middot;&nbsp; Beijing, China
+      </p>
+      <p class="tl-detail">Research Intern &nbsp;&middot;&nbsp; AIR &amp; Pervasive HCI (PI) Lab</p>
+    </div>
+
+    <div class="tl-item">
+      <p class="tl-year">Jul &ndash; Aug 2025</p>
+      <p class="tl-school">
+        <img class="tl-logo" src="logo_ucb.png" alt="UC Berkeley">
+        University of California, Berkeley &nbsp;&middot;&nbsp; US
+      </p>
+      <p class="tl-detail">Summer Session &nbsp;&middot;&nbsp; AI Applications &amp; Cognitive Science of UX</p>
+    </div>
+
+    <div class="tl-item">
+      <p class="tl-year">2023 &ndash; 2027 (expected)</p>
+      <p class="tl-school">
+        <img class="tl-logo" src="logo_bfu.png" alt="Beijing Forestry University">
+        Beijing Forestry University &nbsp;&middot;&nbsp; Beijing, China
+      </p>
+      <p class="tl-detail">B.Eng. Computer Science (Digital Media Technology)</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- HONORS -->
+<section class="section">
+  <h2>Honors &amp; Awards</h2>
+  <div class="honor"><strong>3rd Prize</strong>, National College Digital Media Technology and Creativity Competition, Beijing Division (Oct 2025)</div>
+  <div class="honor"><strong>Outstanding Student Scholarship</strong>, Beijing Forestry University (Oct 2025)</div>
+  <div class="honor"><strong>3rd Prize</strong>, 13th Future Designer National College Digital Art and Design Competition (Aug 2025)</div>
+  <div class="honor"><strong>3rd Prize</strong>, Qingchuang Beijing Challenge Cup, Capital University Student Competition (Jun 2025)</div>
+  <div class="honor"><strong>Academic Excellence Scholarship</strong>, Beijing Forestry University (Nov 2024)</div>
+  <div class="honor"><strong>3rd Prize</strong>, 6th National College Foreign Language Proficiency Competition, English Track (Nov 2023)</div>
+</section>
+
+<!-- SKILLS -->
+<section class="section">
+  <h2>Skills</h2>
+  <table class="skills-table">
+    <tr><td>Programming</td><td>Python, C#, C/C++, JavaScript, HTML/CSS, SQL</td></tr>
+    <tr><td>Frameworks</td><td>PyTorch, Unity, WebGL, Vue, OpenGL, Django, Flask, Node.js</td></tr>
+    <tr><td>3D &amp; Design</td><td>Blender, 3ds Max, Figma, Photoshop</td></tr>
+    <tr><td>Languages</td><td>Mandarin (native) &nbsp;&middot;&nbsp; English (TOEFL 99)</td></tr>
+  </table>
+</section>
+
+<!-- CONTACT -->
+<section class="section" id="contact">
+  <h2>Contact</h2>
+  <p style="font-size:14px;color:var(--muted);line-height:1.7">
+    I am based in Beijing and open to research collaborations and PhD opportunities (Fall 2027).
+    The best way to reach me is by email.
+  </p>
+  <div class="contact-row" style="margin-top:14px">
+    <a href="mailto:Xingruisme@gmail.com" class="contact-chip">
+      <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+      Xingruisme@gmail.com
+    </a>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Beyond Research</h2>
+  <div class="interests-row">
+    <div class="interest-item">
+      <span class="interest-icon">💃</span>
+      <span>Dance</span>
+    </div>
+    <div class="interest-item">
+      <span class="interest-icon">🎾</span>
+      <span>Tennis</span>
+    </div>
+    <div class="interest-item">
+      <span class="interest-icon">🏸</span>
+      <span>Badminton</span>
+    </div>
+    <div class="interest-item">
+      <span class="interest-icon">✈️</span>
+      <span>Travel</span>
+    </div>
+    <div class="interest-item">
+      <span class="interest-icon">🍳</span>
+      <span>Cooking</span>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <span>Xingru Chen &nbsp;&middot;&nbsp; Updated June 2026</span>
+  <span><a href="mailto:Xingruisme@gmail.com">Xingruisme@gmail.com</a></span>
+</footer>
+
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('theme-icon').textContent = isDark ? '\u263E' : '\u2600';
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+}
+// Restore saved theme
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('theme-icon').textContent = saved === 'dark' ? '\u2600' : '\u263E';
+  }
+})();
+</script>
+</body>
+</html>
