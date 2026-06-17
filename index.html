@@ -52,10 +52,7 @@ nav {
   height: 48px;
   transition: background .3s, border-color .3s;
 }
-.nav-name {
-  font-size: 14px; font-weight: 600; color: var(--text);
-  letter-spacing: -0.1px;
-}
+#name-canvas { display: block; }
 .nav-links {
   display: flex; align-items: center; gap: 6px; list-style: none;
 }
@@ -344,7 +341,7 @@ nav {
 
 <!-- NAV -->
 <nav>
-  <span class="nav-name">Xingru Chen</span>
+  <canvas id="name-canvas" style="height:32px;cursor:default;" aria-label="Xingru Chen"></canvas>
   <ul class="nav-links">
     <li><a href="#about">About</a></li>
     <li><a href="#publications">Publications</a></li>
@@ -686,5 +683,648 @@ function toggleTheme() {
   }
 })();
 </script>
+
+<!-- PARTICLE EFFECT ON NAME -->
+
+<!-- CLIMBING GAME -->
+<canvas id="climb-canvas" style="position:fixed;right:0;top:0;height:100vh;width:80px;pointer-events:all;z-index:99;cursor:crosshair;"></canvas>
+<div id="climb-msg" style="position:fixed;right:4px;top:50%;transform:translateY(-50%) rotate(90deg);font-size:10px;color:var(--light);letter-spacing:0.08em;pointer-events:none;z-index:100;white-space:nowrap;transition:opacity .3s;">CLIMB ↑</div>
+
+<script>
+// ── CLIMBING GAME ──
+(function() {
+  const canvas = document.getElementById('climb-canvas');
+  const ctx = canvas.getContext('2d');
+  const msg = document.getElementById('climb-msg');
+
+  const W = 80;
+  let H = window.innerHeight;
+  canvas.width = W;
+  canvas.height = H;
+
+  window.addEventListener('resize', () => {
+    H = window.innerHeight;
+    canvas.height = H;
+    reset();
+  });
+
+  function accent() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? '#e8783a' : '#5c6e4e';
+  }
+  function accentDark() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? '#b85a20' : '#3a4e2e';
+  }
+  function accentLight() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? '#ffaa70' : '#8aaa72';
+  }
+  function wallCol() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? '#1a1917' : '#ece9e3';
+  }
+  function textCol() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? '#a09890' : '#888';
+  }
+
+  // ── HOLDS: realistic route layout ──
+  // Route: 6 holds, alternating left/right, moving up
+  // Hold types: jug, crimp, sloper, pinch
+  const HOLD_TYPES = ['jug','jug','crimp','sloper','crimp','jug'];
+  let holds = [];
+
+  function initHolds() {
+    holds = [];
+    const positions = [
+      { x: W*0.5,  y: H - 30  },  // 0 start - center bottom jug
+      { x: W*0.25, y: H - 110 },  // 1 left
+      { x: W*0.72, y: H - 195 },  // 2 right
+      { x: W*0.3,  y: H - 285 },  // 3 left
+      { x: W*0.68, y: H - 370 },  // 4 right
+      { x: W*0.45, y: H - 455 },  // 5 top - finish
+    ];
+    positions.forEach((p, i) => {
+      holds.push({
+        x: p.x, y: p.y,
+        type: HOLD_TYPES[i],
+        idx: i,
+        isFinish: i === positions.length - 1
+      });
+    });
+  }
+  initHolds();
+
+  // ── DRAW REALISTIC HOLD ──
+  function drawHold(h, isGrabbed) {
+    const x = h.x, y = h.y;
+    const ac = accent(), ad = accentDark(), al = accentLight();
+
+    ctx.save();
+
+    if (h.type === 'jug') {
+      // Large comfortable hold - D-shape
+      const r = 9;
+      // shadow
+      ctx.beginPath();
+      ctx.ellipse(x+1, y+2, r+1, r*0.55+1, 0, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(0,0,0,0.18)';
+      ctx.fill();
+      // main body
+      const grad = ctx.createRadialGradient(x-2, y-2, 1, x, y, r);
+      grad.addColorStop(0, al);
+      grad.addColorStop(0.5, ac);
+      grad.addColorStop(1, ad);
+      ctx.beginPath();
+      ctx.ellipse(x, y, r, r*0.55, 0, 0, Math.PI*2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      // lip ridge
+      ctx.beginPath();
+      ctx.ellipse(x, y-1, r*0.75, r*0.3, 0, Math.PI, Math.PI*2);
+      ctx.strokeStyle = al;
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.6;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+    } else if (h.type === 'crimp') {
+      // Small finger edge
+      const w = 13, hh = 5;
+      // shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.beginPath();
+      ctx.roundRect(x - w/2 + 1, y - hh/2 + 2, w, hh, 2);
+      ctx.fill();
+      // body
+      const grad = ctx.createLinearGradient(x, y-hh, x, y+hh);
+      grad.addColorStop(0, al);
+      grad.addColorStop(0.4, ac);
+      grad.addColorStop(1, ad);
+      ctx.beginPath();
+      ctx.roundRect(x - w/2, y - hh/2, w, hh, 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      // texture lines
+      ctx.strokeStyle = ad;
+      ctx.lineWidth = 0.7;
+      ctx.globalAlpha = 0.4;
+      for (let i = -4; i <= 4; i += 4) {
+        ctx.beginPath();
+        ctx.moveTo(x+i, y-hh/2+1);
+        ctx.lineTo(x+i, y+hh/2-1);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+    } else if (h.type === 'sloper') {
+      // Rounded smooth hold
+      const r = 10;
+      ctx.beginPath();
+      ctx.ellipse(x+1, y+2, r, r*0.6, 0, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(0,0,0,0.12)';
+      ctx.fill();
+      const grad = ctx.createRadialGradient(x-3, y-3, 1, x, y, r);
+      grad.addColorStop(0, al);
+      grad.addColorStop(0.7, ac);
+      grad.addColorStop(1, ad);
+      ctx.beginPath();
+      ctx.ellipse(x, y, r, r*0.6, 0, 0, Math.PI*2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      // smooth highlight
+      ctx.beginPath();
+      ctx.ellipse(x-3, y-2, 4, 2.5, -0.5, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.fill();
+    }
+
+    // finish hold ring
+    if (h.isFinish) {
+      ctx.beginPath();
+      ctx.arc(x, y, 13, 0, Math.PI*2);
+      ctx.strokeStyle = accent();
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.6;
+      ctx.setLineDash([3,3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    // grabbed highlight ring
+    if (isGrabbed) {
+      ctx.beginPath();
+      ctx.arc(x, y, 12, 0, Math.PI*2);
+      ctx.strokeStyle = accentLight();
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.85;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // hold number
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = 'bold 7px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(h.idx + 1, x, y + 0.5);
+
+    ctx.restore();
+  }
+
+  // ── RAGDOLL CLIMBER ──
+  // Nodes: head, shoulder, hip, lhand, rhand, lfoot, rfoot
+  // Constraints keep them connected
+
+  let nodes = {};
+  let lhGrab = null, rhGrab = null; // which hold each hand is on
+  let lfGrab = null, rfGrab = null; // foot holds
+  let stamina = 1.0;
+  let dead = false, won = false;
+  let started = false;
+  let particles = [];
+  let wonTimer = 0;
+  let lastHandMoved = 'rh'; // for alternating
+
+  function makeNode(x, y, pinned) {
+    return { x, y, px: x, py: y, pinned: pinned || false };
+  }
+
+  function initClimber() {
+    const sh = holds[0]; // start hold
+    const sx = sh.x, sy = sh.y;
+    nodes = {
+      lh:   makeNode(sx - 10, sy - 2),
+      rh:   makeNode(sx + 10, sy - 2),
+      sho:  makeNode(sx, sy - 20),  // shoulder
+      hip:  makeNode(sx, sy - 4),   // hip
+      lf:   makeNode(sx - 8, sy + 14),
+      rf:   makeNode(sx + 8, sy + 14),
+      head: makeNode(sx, sy - 32),
+    };
+    lhGrab = sh; rhGrab = sh;
+    lfGrab = null; rfGrab = null;
+    stamina = 1.0;
+    dead = false; won = false;
+    particles = [];
+    wonTimer = 0;
+  }
+
+  function dist(a, b) {
+    return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2);
+  }
+  function distXY(ax,ay,bx,by) {
+    return Math.sqrt((ax-bx)**2 + (ay-by)**2);
+  }
+
+  function constrain(a, b, len, stiff) {
+    const d = dist(a, b);
+    if (d === 0) return;
+    const diff = (d - len) / d * (stiff || 0.5);
+    const dx = (b.x - a.x) * diff * 0.5;
+    const dy = (b.y - a.y) * diff * 0.5;
+    if (!a.pinned) { a.x += dx; a.y += dy; }
+    if (!b.pinned) { b.x -= dx; b.y -= dy; }
+  }
+
+  function integrate() {
+    Object.values(nodes).forEach(n => {
+      if (n.pinned) return;
+      const vx = (n.x - n.px) * 0.85;
+      const vy = (n.y - n.py) * 0.85;
+      n.px = n.x;
+      n.py = n.y;
+      n.x += vx;
+      n.y += vy + 0.25; // gravity
+      // wall bounds
+      n.x = Math.max(2, Math.min(W-2, n.x));
+    });
+  }
+
+  function applyConstraints() {
+    for (let i = 0; i < 8; i++) {
+      // skeleton lengths
+      constrain(nodes.sho, nodes.hip, 16, 0.8);
+      constrain(nodes.head, nodes.sho, 12, 0.8);
+      constrain(nodes.sho, nodes.lh, 18, 0.6);
+      constrain(nodes.sho, nodes.rh, 18, 0.6);
+      constrain(nodes.hip, nodes.lf, 16, 0.6);
+      constrain(nodes.hip, nodes.rf, 16, 0.6);
+      // pin hands to grabbed holds
+      if (lhGrab) { nodes.lh.x = lhGrab.x; nodes.lh.y = lhGrab.y; }
+      if (rhGrab) { nodes.rh.x = rhGrab.x; nodes.rh.y = rhGrab.y; }
+      if (lfGrab) { nodes.lf.x = lfGrab.x; nodes.lf.y = lfGrab.y; }
+      if (rfGrab) { nodes.rf.x = rfGrab.x; nodes.rf.y = rfGrab.y; }
+    }
+  }
+
+  function updatePhysics() {
+    integrate();
+    applyConstraints();
+
+    // stamina: drains when no hands on hold
+    const handsOn = (lhGrab ? 1 : 0) + (rhGrab ? 1 : 0);
+    if (handsOn === 0) stamina -= 0.012;
+    else if (handsOn === 1) stamina -= 0.003;
+    else stamina = Math.min(1, stamina + 0.004);
+    stamina = Math.max(0, stamina);
+
+    if (stamina <= 0) {
+      lhGrab = null; rhGrab = null;
+    }
+
+    // death: hip falls below screen
+    if (nodes.hip.y > H + 40) {
+      dead = true;
+    }
+
+    // particles
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      p.vy += 0.08;
+      p.life -= 0.02;
+    });
+    particles = particles.filter(p => p.life > 0);
+  }
+
+  function spawnParticles(x, y) {
+    for (let i = 0; i < 24; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const s = 1 + Math.random() * 4;
+      particles.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s-1, life: 1, r: 2+Math.random()*3 });
+    }
+  }
+
+  // ── INPUT: click hold to move nearest free hand ──
+  canvas.addEventListener('click', e => {
+    if (!started) { started = true; msg.style.opacity='0'; return; }
+    if (dead) { initClimber(); dead=false; return; }
+    if (won && wonTimer <= 0) { initClimber(); won=false; return; }
+    if (won) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    // find closest hold to click
+    let best = null, bd = 999;
+    holds.forEach(h => {
+      const d = distXY(mx, my, h.x, h.y);
+      if (d < bd) { bd = d; best = h; }
+    });
+    if (!best || bd > 28) return;
+
+    // move alternating hand
+    const moveHand = lastHandMoved === 'lh' ? 'rh' : 'lh';
+    if (moveHand === 'lh') { lhGrab = best; lastHandMoved = 'lh'; }
+    else { rhGrab = best; lastHandMoved = 'rh'; }
+
+    // auto-place feet on nearest lower holds
+    const handsAvgY = ((lhGrab ? lhGrab.y : nodes.lh.y) + (rhGrab ? rhGrab.y : nodes.rh.y)) / 2;
+    let footHolds = holds.filter(h => h.y > handsAvgY + 20).sort((a,b)=>a.y-b.y);
+    if (footHolds.length >= 1) lfGrab = footHolds[0];
+    if (footHolds.length >= 2) rfGrab = footHolds[1] || footHolds[0];
+
+    // restore some stamina on good move
+    stamina = Math.min(1, stamina + 0.15);
+
+    // win check
+    if (best.isFinish && (lhGrab === best || rhGrab === best)) {
+      won = true;
+      wonTimer = 200;
+      spawnParticles(best.x, best.y);
+    }
+  });
+
+  // ── DRAW ──
+  function drawLimb(a, b, width, alpha) {
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    // slight curve via midpoint offset
+    const mx = (a.x+b.x)/2 + (Math.random()*0.5-0.25);
+    const my = (a.y+b.y)/2 + (Math.random()*0.5-0.25);
+    ctx.quadraticCurveTo(mx, my, b.x, b.y);
+    ctx.strokeStyle = accent();
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.globalAlpha = alpha;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  function drawClimber() {
+    const n = nodes;
+    // LEGS (behind body)
+    drawLimb(n.hip, n.lf, 3, 0.75);
+    drawLimb(n.hip, n.rf, 3, 0.75);
+    // foot dots
+    [n.lf, n.rf].forEach(f => {
+      ctx.beginPath(); ctx.arc(f.x, f.y, 3, 0, Math.PI*2);
+      ctx.fillStyle = accentDark(); ctx.fill();
+    });
+    // BODY
+    ctx.beginPath();
+    ctx.moveTo(n.head.x, n.head.y);
+    ctx.lineTo(n.sho.x, n.sho.y);
+    ctx.lineTo(n.hip.x, n.hip.y);
+    ctx.strokeStyle = accent();
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.globalAlpha = 0.9;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    // ARMS
+    drawLimb(n.sho, n.lh, 2.5, 0.8);
+    drawLimb(n.sho, n.rh, 2.5, 0.8);
+    // HANDS
+    [n.lh, n.rh].forEach(h => {
+      ctx.beginPath(); ctx.arc(h.x, h.y, 4, 0, Math.PI*2);
+      ctx.fillStyle = accentLight(); ctx.fill();
+      ctx.strokeStyle = accentDark(); ctx.lineWidth = 1; ctx.stroke();
+    });
+    // HEAD
+    ctx.beginPath();
+    ctx.arc(n.head.x, n.head.y, 6, 0, Math.PI*2);
+    const hg = ctx.createRadialGradient(n.head.x-1,n.head.y-1,1,n.head.x,n.head.y,6);
+    hg.addColorStop(0, accentLight());
+    hg.addColorStop(1, accent());
+    ctx.fillStyle = hg;
+    ctx.fill();
+    ctx.strokeStyle = accentDark(); ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // wall texture
+    ctx.fillStyle = wallCol();
+    ctx.globalAlpha = 0.4;
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+    // subtle grain lines
+    ctx.strokeStyle = accentDark();
+    ctx.lineWidth = 0.3;
+    ctx.globalAlpha = 0.06;
+    for (let y = 0; y < H; y += 12) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    if (!started) {
+      ctx.fillStyle = textCol();
+      ctx.font = '8px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('click', W/2, H/2 - 10);
+      ctx.fillText('hold to', W/2, H/2);
+      ctx.fillText('climb!', W/2, H/2 + 10);
+    }
+
+    // holds
+    holds.forEach(h => {
+      const grabbed = (lhGrab === h || rhGrab === h || lfGrab === h || rfGrab === h);
+      drawHold(h, grabbed);
+    });
+
+    // climber
+    if (started && !dead) drawClimber();
+
+    // particles
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI*2);
+      ctx.fillStyle = accentLight();
+      ctx.globalAlpha = p.life * 0.9;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    // stamina bar
+    if (started && !dead && !won) {
+      const bw = W - 12, bh = 4, bx = 6, by = H - 16;
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 2); ctx.fill();
+      const sc = stamina > 0.35 ? accent() : '#e04040';
+      ctx.fillStyle = sc;
+      ctx.beginPath(); ctx.roundRect(bx, by, bw * stamina, bh, 2); ctx.fill();
+      ctx.fillStyle = textCol();
+      ctx.font = '6px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('GRIP', bx, by - 5);
+    }
+
+    // progress dots
+    if (started) {
+      holds.forEach((h, i) => {
+        const isReached = (lhGrab && lhGrab.idx >= i) || (rhGrab && rhGrab.idx >= i);
+        ctx.beginPath();
+        ctx.arc(5, H - 30 - i * ((H-60)/(holds.length-1)), 2.5, 0, Math.PI*2);
+        ctx.fillStyle = isReached ? accent() : textCol();
+        ctx.globalAlpha = isReached ? 1 : 0.3;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+    }
+
+    // death
+    if (dead) {
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#ff6060';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('FELL!', W/2, H/2-8);
+      ctx.fillStyle = textCol();
+      ctx.font = '7px sans-serif';
+      ctx.fillText('click', W/2, H/2+6);
+      ctx.fillText('retry', W/2, H/2+16);
+    }
+
+    // win
+    if (won) {
+      if (wonTimer > 0) wonTimer--;
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.fillRect(0,0,W,H);
+      ctx.fillStyle = accent();
+      ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('TOP!', W/2, H/2-10);
+      ctx.fillText('🎉', W/2, H/2+4);
+      if (wonTimer <= 0) {
+        ctx.fillStyle = textCol();
+        ctx.font = '7px sans-serif';
+        ctx.fillText('click', W/2, H/2+18);
+        ctx.fillText('again', W/2, H/2+28);
+      }
+    }
+
+    if (started && !dead && !won) updatePhysics();
+    requestAnimationFrame(draw);
+  }
+
+  initClimber();
+  draw();
+})();
+</script>
+
+
+<!-- NAME PARTICLE EFFECT -->
+<script>
+(function() {
+  const canvas = document.getElementById('name-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  let particles = [];
+  let mouse = { x: -9999, y: -9999 };
+  let inited = false;
+
+  function accent() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#5c6e4e';
+  }
+  function textColor() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#1c1c1c';
+  }
+
+  function getPixels(text, w, h, dpr) {
+    const off = document.createElement('canvas');
+    off.width = w * dpr; off.height = h * dpr;
+    const octx = off.getContext('2d');
+    octx.scale(dpr, dpr);
+    octx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+    octx.fillStyle = '#000';
+    octx.textBaseline = 'middle';
+    octx.fillText(text, 0, h / 2);
+    const data = octx.getImageData(0, 0, off.width, off.height).data;
+    const pts = [];
+    const gap = Math.round(dpr * 1.6);
+    for (let y = 0; y < off.height; y += gap) {
+      for (let x = 0; x < off.width; x += gap) {
+        const i = (y * off.width + x) * 4;
+        if (data[i + 3] > 128) {
+          pts.push({ x: x / dpr, y: y / dpr });
+        }
+      }
+    }
+    return pts;
+  }
+
+  class Particle {
+    constructor(ox, oy) {
+      this.ox = ox; this.oy = oy;
+      // start scattered
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height + canvas.height;
+      this.vx = 0; this.vy = 0;
+      this.r = 0.7 + Math.random() * 0.5;
+    }
+    update() {
+      const rect = canvas.getBoundingClientRect();
+      const lx = mouse.x - rect.left;
+      const ly = mouse.y - rect.top;
+      const dx = this.x - lx;
+      const dy = this.y - ly;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      const repel = 36;
+      if (d < repel && d > 0) {
+        const f = (repel - d) / repel;
+        this.vx += (dx / d) * f * 4.5;
+        this.vy += (dy / d) * f * 4.5;
+      }
+      // spring to origin
+      this.vx += (this.ox - this.x) * 0.16;
+      this.vy += (this.oy - this.y) * 0.16;
+      this.vx *= 0.78;
+      this.vy *= 0.78;
+      this.x += this.vx;
+      this.y += this.vy;
+    }
+    draw(col) {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = col;
+      ctx.fill();
+    }
+  }
+
+  function init() {
+    const dpr = window.devicePixelRatio || 1;
+    // measure text width
+    const tmp = document.createElement('canvas');
+    const tc = tmp.getContext('2d');
+    tc.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+    const tw = tc.measureText('Xingru Chen').width + 4;
+    const h = 32;
+    canvas.width = Math.ceil(tw * dpr);
+    canvas.height = Math.ceil(h * dpr);
+    canvas.style.width = Math.ceil(tw) + 'px';
+    canvas.style.height = h + 'px';
+    ctx.scale(dpr, dpr);
+
+    const pts = getPixels('Xingru Chen', Math.ceil(tw), h, dpr);
+    particles = pts.map(p => new Particle(p.x, p.y));
+    inited = true;
+  }
+
+  function loop() {
+    const dpr = window.devicePixelRatio || 1;
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+    const col = accent();
+    particles.forEach(p => { p.update(); p.draw(col); });
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+  // re-init on theme change to update colors (particles auto-pick accent)
+  const observer = new MutationObserver(() => {});
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  window.addEventListener('load', () => { init(); loop(); });
+  window.addEventListener('resize', () => { if (inited) { particles = []; init(); } });
+})();
+</script>
+
 </body>
 </html>
